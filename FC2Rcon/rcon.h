@@ -11,15 +11,16 @@ class rcon : public QObject
 
 public:
     rcon(QObject *parent = nullptr);
+    ~rcon();
 
 private:
     QProcess *proc;
+    bool readyForInput = false;
 
     void sendCommand(const QString &cmd);
 
 private slots:
-    void readyReadStandardOutput();
-    void readyReadStandardError();
+    bool startFC2ServerInstance();
     void readyRead();
 };
 

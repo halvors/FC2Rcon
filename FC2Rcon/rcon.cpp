@@ -3,24 +3,36 @@
 #include <QCoreApplication>
 #include <QDebug>
 
+#include <QDir>
+
 rcon::rcon(QObject *parent) : QObject(parent)
 {
+#if defined(Q_OS_WIN)
+    const QString path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Far Cry 2\\bin"; // "/mnt/applications/SteamLibrary/steamapps/common/Far Cry 2/bin"
+#elif defined(Q_OS_LINUX)
+    const QString path = "/mnt/applications/SteamLibrary/steamapps/common/Far Cry 2/bin";
+#endif
+
+    const QString execFile = "FC2ServerLauncher.exe";
+
     proc = new QProcess(this);
-    proc->setWorkingDirectory("/mnt/applications/SteamLibrary/steamapps/common/Far Cry 2/bin");
-    proc->setProgram("wine");
-    proc->setArguments(QStringList() << "FC2ServerLauncher.exe" << "-borderless" << "-noredirectstdin");
+    proc->setWorkingDirectory(path);
+    proc->setProgram(execFile);
+    proc->setArguments(QStringList() << "-noredirectstdin");
     proc->setProcessChannelMode(QProcess::SeparateChannels);
     proc->setReadChannel(QProcess::ProcessChannel::StandardOutput);
 
-    connect(proc, &QProcess::readyReadStandardOutput, this, &rcon::readyReadStandardOutput);
-    connect(proc, &QProcess::readyReadStandardError, this, &rcon::readyReadStandardError);
     connect(proc, &QProcess::readyRead, this, &rcon::readyRead);
+    //connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [=](int exitCode, QProcess::ExitStatus exitStatus){ startFC2ServerInstance(); });
+
+    startFC2ServerInstance();
 
     // Start the process
-    proc->start();
-    QCoreApplication::processEvents();
-    proc->waitForStarted();
+    //proc->start();
+    //QCoreApplication::processEvents();
+    //proc->waitForStarted();
 
+    /*
     // Read the output
     proc->waitForReadyRead();
     //QString output(proc->readAllStandardOutput());
@@ -42,6 +54,20 @@ rcon::rcon(QObject *parent) : QObject(parent)
 
     // Wait for finished
     proc->waitForFinished();
+    */
+}
+
+rcon::~rcon()
+{
+    proc->kill();
+}
+
+bool rcon::startFC2ServerInstance()
+{
+    // Start the process
+    proc->start();
+
+    return proc->waitForStarted();
 }
 
 void rcon::sendCommand(const QString &cmd)
@@ -50,18 +76,17 @@ void rcon::sendCommand(const QString &cmd)
     proc->waitForBytesWritten();
 }
 
-void rcon::readyReadStandardOutput()
-{
-    qDebug() << "Got stdout!";
-}
-
-void rcon::readyReadStandardError()
-{
-    //qDebug() << "Got stderr!";
-    //qDebug() << proc->readAllStandardError();
-}
-
 void rcon::readyRead()
 {
-    qDebug() << proc->readAll();
+    while (proc->bytesAvailable() && proc->canReadLine()) {
+        QByteArray line = proc->readLine();
+
+        if (line.contains("Entering lobby!")) {
+            readyForInput = true;
+            sendCommand("net_GetCurrentMapName");
+        }
+
+        if (readyForInput)
+            qDebug() << line;
+    }
 }
