@@ -21,6 +21,7 @@ private:
 
 private slots:
     bool startFC2ServerInstance();
+    void errorOccurred(QProcess::ProcessError error);
     void readyRead();
 };
 
