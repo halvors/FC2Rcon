@@ -8,40 +8,9 @@
 
 FC2DedicatedServer::FC2DedicatedServer(QObject *parent) : QObject(parent)
 {
-    QString path;
-    const QString execFile = "FC2ServerLauncher.exe";
-    QStringList args = QStringList() << "-noredirectstdin";
-
-#if defined(Q_OS_WIN)
-    path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Far Cry 2\\bin";
-#elif defined(Q_OS_LINUX)
-    path = "/mnt/applications/SteamLibrary/steamapps/common/Far Cry 2/bin";
+#if defined(Q_OS_LINUX)
     args.prepend("wine");
 #endif
-
-    proc = new QProcess(this);
-    proc->setWorkingDirectory(path);
-    proc->setProgram(QString("%1/%2").arg(path).arg(execFile));
-    proc->setArguments(args);
-    proc->setProcessChannelMode(QProcess::SeparateChannels);
-
-#if defined(Q_OS_WIN)
-    proc->setCreateProcessArgumentsModifier([] (QProcess::CreateProcessArguments *args)
-    {
-        STARTUPINFO *si = args->startupInfo;
-        si->dwFlags |= STARTF_USESHOWWINDOW;
-        //si->wShowWindow = SW_HIDE;
-    });
-#endif
-
-    connect(proc, &QProcess::readyRead, this, &FC2DedicatedServer::readyRead);
-    connect(proc, &QProcess::errorOccurred, this, &FC2DedicatedServer::errorOccurred);
-    //connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [=](int exitCode, QProcess::ExitStatus exitStatus){ startFC2ServerInstance(); });
-
-    if (startFC2ServerInstance())
-        qDebug() << "Started process!";
-    else
-        qDebug() << "Process did not start!";
 }
 
 FC2DedicatedServer::~FC2DedicatedServer()
@@ -49,12 +18,54 @@ FC2DedicatedServer::~FC2DedicatedServer()
     proc->kill();
 }
 
-bool FC2DedicatedServer::startFC2ServerInstance()
+bool FC2DedicatedServer::start()
 {
+    if (!proc) {
+        QString path;
+        QString file = "FC2ServerLauncher.exe";
+        QStringList args = QStringList() << "-noredirectstdin";
+
+#if defined(Q_OS_WIN)
+        path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Far Cry 2\\bin";
+#elif defined(Q_OS_LINUX)
+        path = "/mnt/applications/SteamLibrary/steamapps/common/Far Cry 2/bin";
+        args.prepend("wine");
+#endif
+
+        proc = new QProcess(this);
+        proc->setWorkingDirectory(path);
+        proc->setProgram(QString("%1/%2").arg(path).arg(file));
+        proc->setArguments(args);
+        proc->setProcessChannelMode(QProcess::SeparateChannels);
+
+
+
+#if defined(Q_OS_WIN)
+        proc->setCreateProcessArgumentsModifier([] (QProcess::CreateProcessArguments *args)
+        {
+            STARTUPINFO *si = args->startupInfo;
+            si->dwFlags |= STARTF_USESHOWWINDOW;
+            //si->wShowWindow = SW_HIDE;
+        });
+#endif
+    }
+
+    connect(proc, &QProcess::readyRead, this, &FC2DedicatedServer::readyRead);
+    connect(proc, &QProcess::errorOccurred, this, &FC2DedicatedServer::errorOccurred);
+    //connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [=](int exitCode, QProcess::ExitStatus exitStatus){ startFC2ServerInstance(); });
+
     // Start the process
     proc->start();
 
-    return proc->waitForStarted();
+    if (proc->waitForStarted()) {
+        qDebug() << "Started process!";
+
+        return true;
+    } else {
+        qDebug() << "Process did not start!";
+    }
+
+    return false;
 }
 
 void FC2DedicatedServer::sendCommand(const QString &cmd)

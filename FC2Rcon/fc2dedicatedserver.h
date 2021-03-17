@@ -12,17 +12,14 @@ public:
     explicit FC2DedicatedServer(QObject *parent = nullptr);
     ~FC2DedicatedServer();
 
+    bool start();
     void sendCommand(const QString &cmd);
-
-public slots:
-
 
 private:
     QProcess *proc;
     bool readyForInput = false;
 
 private slots:
-    bool startFC2ServerInstance();
     void errorOccurred(QProcess::ProcessError error);
     void readyRead();
 };
