@@ -11,6 +11,7 @@ CONFIG -= app_bundle
 SOURCES += \
         fc2dedicatedserver.cpp \
         main.cpp \
+        packet.cpp \
         rconserver.cpp
 
 # Default rules for deployment.
@@ -20,4 +21,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     fc2dedicatedserver.h \
+    packet.h \
     rconserver.h

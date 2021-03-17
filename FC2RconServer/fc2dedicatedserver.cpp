@@ -38,8 +38,6 @@ bool FC2DedicatedServer::start()
         proc->setArguments(args);
         proc->setProcessChannelMode(QProcess::SeparateChannels);
 
-
-
 #if defined(Q_OS_WIN)
         proc->setCreateProcessArgumentsModifier([] (QProcess::CreateProcessArguments *args)
         {
@@ -68,9 +66,9 @@ bool FC2DedicatedServer::start()
     return false;
 }
 
-void FC2DedicatedServer::sendCommand(const QString &cmd)
+void FC2DedicatedServer::sendCommand(const QString &command)
 {
-    proc->write(cmd.toUtf8().append('\n'));
+    proc->write(command.toUtf8().append('\n'));
     proc->waitForBytesWritten();
 }
 
@@ -87,10 +85,13 @@ void FC2DedicatedServer::readyRead()
         if (line.contains("Entering lobby!")) {
             readyForInput = true;
             sendCommand("net_GetHostAddress");
+            //break;
         }
 
-        if (readyForInput)
+        if (readyForInput) {
             qDebug() << line;
+            emit commandResult(line);
+        }
     }
 }
 

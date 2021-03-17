@@ -13,7 +13,7 @@ public:
     ~FC2DedicatedServer();
 
     bool start();
-    void sendCommand(const QString &cmd);
+    void sendCommand(const QString &command);
 
 private:
     QProcess *proc;
@@ -22,6 +22,9 @@ private:
 private slots:
     void errorOccurred(QProcess::ProcessError error);
     void readyRead();
+
+signals:
+    void commandResult(const QByteArray &data);
 };
 
 #endif // FC2DEDICATEDSERVER_H

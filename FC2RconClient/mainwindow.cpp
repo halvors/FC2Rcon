@@ -24,7 +24,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::connected()
 {
-    qDebug().noquote() << QString("Connected to %1:%2").arg(socket->peerAddress().toIPv4Address()).arg(socket->peerPort());
+    qDebug().noquote() << QString("Connected to %1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
 }
 
 void MainWindow::disconnected()
@@ -54,7 +54,7 @@ void MainWindow::displayError(QAbstractSocket::SocketError socketError)
 void MainWindow::readyRead()
 {
     while (socket->bytesAvailable() > 0) {
-        ui->textEdit->insertPlainText(socket->readLine());
+        ui->textEdit->insertPlainText(socket->readLine().append('\n'));
     }
 }
 
@@ -64,14 +64,14 @@ void MainWindow::on_pushButton_clicked()
     uint16_t port = 8999;
 
     socket->connectToHost(host, port);
-
-    qDebug() << "lol";
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
     QByteArray data = ui->lineEdit->text().toUtf8();
 
-    if (!data.isEmpty())
+    if (!data.isEmpty()) {
         socket->write(data);
+        ui->lineEdit->clear();
+    }
 }
