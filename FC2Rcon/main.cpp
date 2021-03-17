@@ -1,12 +1,13 @@
 #include <QCoreApplication>
 
-#include "rcon.h"
+#include "rconserver.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    rcon rcon;
+    RconServer rconServer;
+    rconServer.run();
 
     return a.exec();
 }
