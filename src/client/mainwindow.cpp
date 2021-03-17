@@ -1,14 +1,21 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-
 #include <QString>
 #include <QHostAddress>
 #include <QAbstractSocket>
+
+#include <QByteArray>
+#include <QDataStream>
+
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
+#include "packet.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::on_pushButton_2_clicked);
 
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::connected, this, &MainWindow::connected);
@@ -53,8 +60,13 @@ void MainWindow::displayError(QAbstractSocket::SocketError socketError)
 
 void MainWindow::readyRead()
 {
-    while (socket->bytesAvailable() > 0) {
-        ui->textEdit->insertPlainText(socket->readLine().append('\n'));
+    while (socket->bytesAvailable() > 0) { // TODO: Bigger than min packet len?
+        Packet packet;
+
+        QDataStream in(socket);
+        in >> packet;
+
+        ui->textEdit->insertPlainText(packet.data.append('\n'));
     }
 }
 
@@ -71,7 +83,11 @@ void MainWindow::on_pushButton_2_clicked()
     QByteArray data = ui->lineEdit->text().toUtf8();
 
     if (!data.isEmpty()) {
-        socket->write(data);
+        Packet packet(Packet::Origin::Client, Packet::Type::Request, data);
+
+        QDataStream out(socket);
+        out << packet;
+
         ui->lineEdit->clear();
     }
 }

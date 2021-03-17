@@ -55,6 +55,9 @@ QDataStream &operator >>(QDataStream &in, Packet &packet)
     packet.type = Packet::Type(type);
 
     // TODO: make sure to read right length here?
+    //packet.data.resize(16);
+    //in.readRawData(packet.data.data(), 16);
+
     in >> packet.data;
 
     return in;

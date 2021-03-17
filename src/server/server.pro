@@ -11,15 +11,15 @@ CONFIG -= app_bundle
 SOURCES += \
         fc2dedicatedserver.cpp \
         main.cpp \
-        packet.cpp \
         rconserver.cpp
+
+HEADERS += \
+    fc2dedicatedserver.h \
+    rconserver.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-HEADERS += \
-    fc2dedicatedserver.h \
-    packet.h \
-    rconserver.h
+include(../common/common.pri)

@@ -1,6 +1,8 @@
 #include <QDebug>
 #include <QString>
 
+#include <QDataStream>
+
 #include "rconserver.h"
 #include "packet.h"
 
@@ -42,7 +44,10 @@ void RconServer::newConnection()
     connect(socket, &QAbstractSocket::readyRead, this, &RconServer::readyRead);
     sockets.push_back(socket);
 
-    socket->write("Welcome to FC2Rcon!");
+    Packet packet(Packet::Origin::Server, Packet::Type::Response, "Welcome to FC2Rcon!");
+
+    QDataStream out(socket);
+    out << packet;
 
     qDebug().noquote() << QString("New connection from %1:%2").arg(socket->peerAddress().toString()).arg(socket->peerPort());
 }
@@ -70,8 +75,9 @@ void RconServer::readyRead()
 void RconServer::write(const QByteArray &data)
 {
     for (QTcpSocket *socket : sockets) {
-        QDataStream out(socket);
         Packet packet(Packet::Origin::Server, Packet::Type::Response, data);
+
+        QDataStream out(socket);
         out << packet;
     }
 }

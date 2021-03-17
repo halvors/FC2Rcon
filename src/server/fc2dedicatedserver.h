@@ -13,10 +13,11 @@ public:
     ~FC2DedicatedServer();
 
     bool start();
+    void stop();
     void sendCommand(const QString &command);
 
 private:
-    QProcess *proc;
+    QProcess *proc = nullptr;
     bool readyForInput = false;
 
 private slots:
